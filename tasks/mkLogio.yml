@@ -1,0 +1,7 @@
+- set_fact: logio_user="{{logio_user|default(ansible_ssh_user)}}"
+  when: logio_user is not defined
+- set_fact: logio_home=/home/{{logio_user}}
+  when: logio_home is not defined
+
+- name: Copy {{fragment}} Log.io template
+  include: tasks/autobuild/template-conf.yml autobuild_base={{logio_home}}/.log.io/ module=harvester

@@ -1,0 +1,9 @@
+#- name: Check if directory {{dir}} exists
+#  stat: path={{dir}}
+#  register: dir_check
+#  become: yes
+#
+- name: Create directory {{dir}}
+  file: path={{dir}} state=directory owner={{owner|default(ansible_ssh_user)}} group={{group|default("admin")}} mode={{mode|default("a+rw")}} recurse={{do_recurse|default(true)}}
+  become: yes
+

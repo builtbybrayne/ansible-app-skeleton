@@ -1,0 +1,50 @@
+- set_fact: npm_build="{{npm_build_dir}}/{{npm.service_name}}"
+  tags:
+    - always
+- set_fact: npm_script="{{npm_script_dir}}/run-{{npm.service_name}}.sh"
+  tags:
+    - always
+- set_fact: _logfile="/var/log/{{npm.service_name}}.log"
+  tags:
+    - always
+
+- name: Set up npm_script log rotation
+  include: mkLogrotate.yml name={{npm.service_name}} logfile="{{_logfile}}"
+
+- name: Add {{npm.service_name}} to Log.io
+  include: mkLogio.yml fragment={{npm.service_name}} template=npm_script-logio.conf.j2
+
+- name: Ensure {{npm.service_name}} directories exist
+  include: mkdir.yml dir="{{item}}"
+  with_items:
+    - "{{npm_build_directory}}"
+
+- name: Copy bootstrap package.json for {{npm.service_name}}
+  template: src=package.json.j2 dest="{{npm_build_directory}}/package.json" owner={{npm.user|default(ansible_ssh_user}} group=admin mode=0644
+
+- name: Check if we need to run npm install for {{npm.service_name}}
+  shell: npm ls
+  args:
+      chdir: "{{npm_build_directory}}"
+  ignore_errors: true
+  changed_when: false
+  register: npm_ls
+
+- name: Build {{npm.service_name}}
+  shell: npm install
+  args:
+    chdir: "{{npm_build_directory}}"
+  when: npm_ls|failed
+  register: install
+
+- name: Copy run script for {{npm.service_name}}
+  template: src="run-script.sh.j2" dest="{{npm_script}}" owner={{npm.user|default(ansible_ssh_user}} group=admin mode=0755
+  when: npm.no_service is not defined or npm.no_service == false
+
+- name: Configure nginx for {{npm.service_name}}
+  include: mknginx.yml ng="{{npm.nginx}}"
+  when: npm.nginx is defined
+
+- name: Make service {{npm.service_name}}
+  include: tasks/mkservice.yml service_name="{{npm.service_name}}" service_script="{{npm_script}}" reload="{{install|changed}}"
+  when: npm.no_service is not defined or npm.no_service == false

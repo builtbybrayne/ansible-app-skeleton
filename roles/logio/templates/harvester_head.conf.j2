@@ -1,0 +1,10 @@
+exports.config = {
+  nodeName: "{{ansible_hostname}}",
+  logStreams: {
+      syslog: [
+        "/var/log/syslog"
+      ],
+      logio: [
+        "/var/log/logio/harvester.log",
+        "/var/log/logio/server.log"
+      ]

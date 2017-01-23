@@ -1,0 +1,19 @@
+#- name: Ensure systemd service exists
+#  apt: name=systemd-services state=latest
+#  become: yes
+
+- name: make service "{{service_name}}"
+  template:
+   src: "{{service_template|default('systemd-simple-service.j2')}}"
+   dest: "/etc/systemd/system/{{service_name}}.service"
+   mode: 0644
+  become: yes
+  register: make_service
+
+#- name: Set max open files for "{{service_name}}"
+#  include: set_service_max_open_files.yml
+#  when: service_max_open_files is defined
+
+- include: tasks/runservice.yml run_reload="{{reload|default(false) or make_service|changed}}"
+  when: runservice is not defined or runservice
+

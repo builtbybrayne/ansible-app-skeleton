@@ -1,0 +1,17 @@
+- name: Reload daemons
+  command: systemctl daemon-reload
+  become: yes
+  changed_when: false
+
+- name: run service "{{service_name}}"
+  service: name="{{service_name}}" state={{'restarted' if (run_reload is defined and run_reload) else 'started'}} enabled=true
+  become: yes
+  register: service_result
+
+- name: Check service "{{service_name}}" is running
+  command: service "{{service_name}}" status
+  when: service_check is not defined or service_check
+  register: service_running
+  failed_when: service_running.rc != 0
+  become: yes
+  changed_when: false

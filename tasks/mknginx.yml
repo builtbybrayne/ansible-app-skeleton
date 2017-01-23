@@ -1,0 +1,16 @@
+- set_fact: ng_dest="{{ng.dest|default("nginx-{{ng.service}}.conf")}}"
+
+- name: configure nginx to expose {{ng.service}}
+  template: src="{{ng.src}}" dest="/etc/nginx/sites-available/{{ng_dest}}" owner="{{ng.owner|default(ansible_ssh_user)}}" group="{{ng.group|default('admin')}}" mode="{{ng.mode|default(0644)}}"
+  become: yes
+  register: nginx_task
+
+- name: expose {{ng.service}}
+  file: src="/etc/nginx/sites-available/{{ng_dest}}" dest="/etc/nginx/sites-enabled/{{ng_dest}}" owner="{{ng.owner|default(ansible_ssh_user)}}" state=link
+  become: yes
+  register: ui_task
+
+- name: restart nginx
+  shell: nginx -s reload
+  become: yes
+  when: nginx_task|changed or ui_task|changed

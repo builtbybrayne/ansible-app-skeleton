@@ -1,0 +1,15 @@
+- set_fact: build_owner={{autobuild_owner|default('root' if autobuild_become|default(false) else ansible_ssh_user)}}
+
+- name: Ensure directory exists
+  include: mkdir.yml dir={{item}} owner={{build_owner}} group=admin
+  changed_when: false
+  become: "{{autobuild_become|default('no')}}"
+  with_items:
+    - "{{autobuild_base}}"
+    - "{{autobuild_base}}autobuild.d/"
+
+- name: Copy {{fragment}} for {{module}}
+  template: src={{template}} dest={{autobuild_base}}autobuild.d/{{priority|default("50")}}-{{fragment}}.conf owner={{build_owner}} group=admin mode=0644
+  register: autobuild_config
+  become: "{{autobuild_become|default('no')}}"
+  notify: rebuild {{module}}

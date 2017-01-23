@@ -1,0 +1,27 @@
+#- name: Import Nodesource GPG signing key
+#  apt_key: url=https://deb.nodesource.com/gpgkey/nodesource.gpg.key state=present
+#  become: yes
+#
+#- name: Add Nodesource repository
+#  apt_repository: repo="deb https://deb.nodesource.com/ubuntu {{ubuntu_version_name}} main" state=present
+#  become: yes
+#
+#- apt: update_cache=yes
+
+- name: Install npm
+  apt: name="{{item}}" state=latest
+  become: yes
+  with_items:
+    - npm
+    - nodejs
+
+- name: Link nodejs to /usr/bin/node
+  file: src=/usr/bin/nodejs dest=/usr/bin/node state=link owner=smc group=admin mode=0755
+  become: yes
+
+- name: Copy .npmrc
+  copy: src=.npmrc dest=/home/{{npm_user|default(ansible_ssh_user)}}/ owner=smc group=admin mode=0600
+
+- name: Install gulp
+  npm: name=gulp global=yes
+  become: yes

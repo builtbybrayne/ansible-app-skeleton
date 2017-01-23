@@ -1,0 +1,5 @@
+- name: restart logio-harvester
+  include: tasks/runservice.yml service_name=logio-harvester
+
+- name: restart logio-server
+  include: tasks/runservice.yml service_name=logio-server

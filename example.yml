@@ -1,0 +1,6 @@
+- hosts: all
+  pre_tasks:
+    - include: tasks/facts.yml
+
+- include: _prep.yml
+  tags: ["_prep"]

@@ -1,0 +1,48 @@
+- set_fact: _user="{{logio_user|default(ansible_ssh_user)}}"
+- set_fact: _home=/home/{{_user}}
+
+- name: Install Log.io
+  command: sudo npm install -g log.io --user={{_user}} creates=/usr/local/lib/node_modules/log.io/bin/log.io-server
+
+- name: Set up Log.io log rotation
+  include: mkLogrotate.yml name=logio logfile={{item}}
+  with_items:
+    - /var/log/logio/harvester.log
+    - /var/log/logio/server.log
+
+- name: Copy Log.io service scripts
+  copy: src=logio-harvester.sh dest=/usr/local/bin/ mode=a+x
+  become: yes
+  notify: restart logio-harvester
+
+- name: Copy Log.io service scripts
+  copy: src=logio-server.sh dest=/usr/local/bin/ mode=a+x
+  become: yes
+  notify: restart logio-server
+
+- name: Start Log.io Server
+  include: mkService.yml service_name="logio-server" service_script="/usr/local/bin/logio-server.sh"
+
+- name: Copy Log.io Config
+  include: mkLogio.yml fragment="{{item.fragment}}" template={{item.template}} priority={{item.priority}}
+  with_items:
+    - { fragment: "head", template: harvester_head.conf.j2, priority: "10" }
+    - { fragment: "foot", template: harvester_foot.conf.j2, priority: "90" }
+  notify: build log.io
+
+- name: Build Log.io
+  include: tasks/autobuild/build-conf.yml module="harvester" autobuild_base={{_home}}/.log.io/ build_only=true
+  changed_when: false
+
+- name: Check config has changed
+  shell: diff {{_home}}/.log.io/harvester-autobuild.conf {{_home}}/.log.io/harvester.conf
+  register: logio_config
+  ignore_errors: true
+
+- name: Rebuild Log.io if changed
+  include: tasks/autobuild/build-conf.yml module=harvester autobuild_base={{_home}}/.log.io/ no_build=true
+  register: logio_rebuilt
+  when: logio_config|changed
+
+- name: Start Log.io Harvester
+  include: mkService.yml service_name="logio-harvester" service_script="/usr/local/bin/logio-harvester.sh" reload="{{logio_config|changed}}"

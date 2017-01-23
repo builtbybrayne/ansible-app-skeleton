@@ -1,0 +1,16 @@
+author=<TODO: Your name here>
+
+ansible_ssh_user: <TODO: Define ansible ssh user>
+
+include_python: true
+
+ubuntu_version_numeric: 16.04
+ubuntu_version_name: xenial
+
+slack_token: <TODO: Set slack token>
+slack_user: <TODO: Set slack user>
+
+nginx_amplify_key: <TODO: Set nginx amplify key>
+
+npm_build_dir: <TODO: set npm build directory. Must be persistent; Do not use tmp>
+npm_script_dir: /usr/local/bin

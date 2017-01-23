@@ -1,0 +1,13 @@
+- name: Reboot
+  shell: sleep 1 && /sbin/shutdown -r now
+  async: 1
+  poll: 0
+  ignore_errors: true
+  become: yes
+
+- name: wait for the target to finish rebooting
+  local_action: wait_for host={{ansible_host}} state=started port=22 delay=10 connect_timeout=30
+  become: no
+
+- name: Regather facts
+  setup:

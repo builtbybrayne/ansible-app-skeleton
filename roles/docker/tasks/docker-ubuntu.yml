@@ -1,0 +1,11 @@
+- name: remove apt-get docker (Ubuntu)
+  apt: name=docker.io state=absent
+  become: yes
+
+- name: install docker from script (Ubuntu)
+  script: scripts/install_vm_docker.sh creates=/usr/bin/docker
+  become: yes
+
+
+
+

@@ -1,0 +1,14 @@
+- include: docker-ubuntu.yml
+
+- name: Add user to docker group
+  user: name={{docker_user|default(ansible_ssh_user)}} groups=docker append=yes
+  become: yes
+  register: docker_group_task
+
+- name: install docker-py
+  pip: name=docker-py
+  become: yes
+
+- name: reboot if docker group changed
+  include: reboot.yml
+  when: docker_group_task|changed

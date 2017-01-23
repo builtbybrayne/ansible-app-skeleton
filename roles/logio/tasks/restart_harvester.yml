@@ -1,0 +1,18 @@
+- set_fact: _user="{{logio_user|default(ansible_ssh_user)}}"
+- set_fact: _home=/home/{{_user}}
+
+- name: Check if log.io harvester service exists
+  command: service logio-harvester status
+  register: logio_service
+  ignore_errors: true
+  changed_when: false
+
+- name: Restart Log.io harvester
+  include: tasks/autobuild/build-conf.yml module=harvester service=logio-harvester autobuild_base={{_home}}/.log.io/
+  when: logio_service.rc == 0
+
+- fail: msg="Log.io Harvester service does not yet exist so cannot be started"
+  ignore_errors: true
+  when: logio_service.rc != 0
+
+

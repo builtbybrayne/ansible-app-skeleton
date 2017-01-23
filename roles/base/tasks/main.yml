@@ -1,0 +1,70 @@
+- include: facts.yml
+
+# # # # # # # # # # # # # # # # # #
+#
+#   Fix sudo
+#
+
+- name: Copy sudoers file for safety
+  command: cp -f /etc/sudoers /etc/sudoers.tmp
+  become: yes
+  changed_when: false
+
+- name: sudoers
+  lineinfile: dest=/etc/sudoers.tmp state=present regexp="Defaults.*env_reset" line='Defaults    env_reset'
+  become: yes
+  register: sudoers_regexp
+
+- name: Final sudoers file check
+  shell: visudo -q -c -f /etc/sudoers.tmp && cp -f /etc/sudoers.tmp /etc/sudoers
+  become: yes
+  register: sudoers_copy
+  when: sudoers_regexp|changed
+
+- name: sudo alias
+  lineinfile: dest=/etc/bash_aliases state=absent regexp="alias sudo=.*"
+  become: yes
+  register: sudo_alias_task
+
+
+# # # # # # # # # # # # # # # # # #
+#
+#   System Settings
+#
+
+- name: Up max file descriptors
+  blockinfile:
+    dest: /etc/security/limits.conf
+    block: |
+      root soft nofile {{max_open_files}}
+      root hard nofile {{max_open_files}}
+      * soft nofile {{max_open_files}}
+      * hard nofile {{max_open_files}}
+    insertbefore: "# End of file"
+    marker: "# {mark} Max File Descriptors (Ansible)"
+  become: yes
+  register: max_file_descriptors
+
+
+# # # # # # # # # # # # # # # # # #
+#
+#   Env Variables
+#
+
+- include: slack.yml
+
+
+
+# # # # # # # # # # # # # # # # # #
+#
+#   Reboot and update
+#
+
+- name: reboot if common tasks changed
+  include: reboot.yml
+  when: sudoers_copy|changed or sudo_alias_task|changed or max_file_descriptors|changed
+
+- include: apt-update.yml
+  tags:
+    - apt
+

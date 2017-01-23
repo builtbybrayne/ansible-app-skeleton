@@ -1,0 +1,7 @@
+- name: Add {{key}} var to /etc/environment
+  lineinfile: dest=/etc/environment regexp="^{{key}}=" line="{{key}}={{value}}" state=present
+  become: yes
+
+- name: Ensure {{key}} var is exported
+  lineinfile: dest=/etc/environment line="export {{key}}" state=present insertafter="{{key}}={{value}}"
+  become: yes

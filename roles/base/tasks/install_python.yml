@@ -1,0 +1,14 @@
+- name: Download get-pip.py file
+  get_url: dest=/var/tmp/get-pip.py url=https://bootstrap.pypa.io/get-pip.py
+  changed_when: false
+
+- name: Install pip
+  command: python /var/tmp/get-pip.py creates=/usr/local/bin/pip
+  become: yes
+  changed_when: false
+
+- name: install python libs
+  apt: name={{item}} state=present
+  with_items:
+    - python-passlib
+  become: yes

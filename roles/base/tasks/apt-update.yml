@@ -1,0 +1,39 @@
+- name: update apt cache
+  apt: update_cache=yes
+  become: yes
+  changed_when: false
+
+- name: install core utils (htop, unzip, tree, gcc etc)
+  apt: name={{item}} state=present
+  with_items:
+    - htop
+    - unzip
+    - tar
+    - tree
+    - build-essential
+    - make
+    - apt-transport-https
+    - ca-certificates
+    - sudo
+    - wget
+    - curl
+    - git
+  become: yes
+
+- include: install_python.yml
+  when: include_python|default(false)
+
+- name: Add dumpserver.py
+  copy: src=dumpserver.py dest=/usr/local/bin/dumpserver owner={{ansible_ssh_user}} group=admin mode=0755
+  become: yes
+  tags:
+    - dumpserver
+
+- name: Add udpdumpserver.py
+  copy: src=udpdumpserver.py dest=/usr/local/bin/udpdumpserver owner={{ansible_ssh_user}} group=admin mode=0755
+  become: yes
+  tags:
+    - dumpserver
+
+
+

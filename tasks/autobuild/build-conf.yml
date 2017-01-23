@@ -1,0 +1,18 @@
+- set_fact: _owner={{autobuild_owner|default('root' if autobuild_become|default(false) else ansible_ssh_user)}}
+
+- name: Build {{autobuild_base}}{{module}}.conf
+  assemble: src={{autobuild_base}}autobuild.d dest={{autobuild_base}}{{module}}-autobuild.conf owner={{_owner}} group=admin mode=0644 delimiter="\n\n"
+  register: build_config
+  become: "{{autobuild_become|default('no')}}"
+  when: no_build is not defined or not no_build
+
+- name: Copy {{autobuild_base}}{{module}}.conf into place
+  copy: remote_src=true src={{autobuild_base}}{{module}}-autobuild.conf dest={{autobuild_base}}{{module}}.conf
+  register: config_rebuilt
+  become: "{{autobuild_become|default('no')}}"
+  when: build_only is not defined or not build_only
+
+- name: Restart {{module}} service
+  include: tasks/runservice.yml service_name={{service}} run_reload="{{config_rebuilt is defined and config_rebuilt|changed}}"
+  become: yes
+  when: service is defined and (build_only is not defined or not build_only) and (no_restart is not defined or not no_restart)

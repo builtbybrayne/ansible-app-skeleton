@@ -1,0 +1,9 @@
+- name: Set SLACKBOT_TOKEN
+  include: mkenv.yml key="SLACK_TOKEN" value="{{slack_token}}"
+  become: yes
+  when: slack_token is defined
+
+- name: Set SLACKBOT_USER
+  include: mkenv.yml key="SLACK_USER" value="{{slack_user}}"
+  become: yes
+  when: slack_user is defined

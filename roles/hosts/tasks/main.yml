@@ -1,0 +1,30 @@
+# # # # # # # # # # # # # # # # # #
+#
+#   Own Host
+#
+
+- name: Own Hostname changes
+  replace: dest=/etc/hostname regexp="(.*\n?)+" replace="{{hostname}}"
+  become: yes
+  when: hostname is defined and ansible_hostname != hostname
+  register: hostname_task
+
+- name: Clean /etc/hosts of blank hostname
+  lineinfile: dest=/etc/hosts regexp="ubuntu-minimal" state=absent
+  become: yes
+  when: hostname_task|changed
+
+- name: Remove old /etc/hosts own hostname
+  lineinfile: dest=/etc/hosts line="127.0.0.1   {{ansible_hostname}}" state=absent
+  become: yes
+  when: hostname_task|changed
+
+- name: Update /etc/hosts with own hostname
+  lineinfile: dest=/etc/hosts line="127.0.0.1   {{hostname}}" state=present
+  become: yes
+  when: hostname is defined
+
+- name: reboot if common tasks changed
+  include: reboot.yml
+  when: hostname_task|changed
+

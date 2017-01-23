@@ -1,0 +1,26 @@
+- name: Define Architecture
+  set_fact: arch="{{(ansible_architecture.find("64") != -1)|ternary('amd64', 'arm')}}"
+  when: arch is undefined
+  register: arch_set
+  tags:
+    - always
+
+
+- name: Register daemon command (amd64)
+  set_fact: daemon_cmd=daemon
+  when: daemon_cmd is undefined and arch == "amd64"
+  tags:
+      - always
+
+- name: Register daemon command (arm)
+  set_fact: daemon_cmd=daemonize
+  when: daemon_cmd is undefined and arch == "arm"
+  tags:
+      - always
+
+- debug: var=hostvars[inventory_hostname]
+  when: facts_run|default(false) != true
+  tags:
+    - always
+
+- set_fact: facts_run=true

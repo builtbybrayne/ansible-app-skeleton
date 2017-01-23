@@ -1,0 +1,29 @@
+{% set sudo = service_sudo | default(false) -%}
+{% set kill_mode = service_kill_mode | default(false) -%}
+{% set restart_schedule = service_restart_schedule | default(false) -%}
+[Unit]
+Description=Job that runs the {{service_name}} daemon
+
+[Service]
+Type=simple
+ExecStart={{service_script}} {{service_opts|default(None)}}
+EnvironmentFile=/etc/environment
+{% if restart_schedule %}WatchdogSec={{restart_schedule}}
+Restart=always
+{% else %}Restart=on-failure
+{% endif %}
+{% if not sudo %}User={{service_user|default(ansible_ssh_user)}}
+{% endif %}
+{% if not sudo %}Group={{service_group|default("admin")}}
+{% endif %}
+{% if kill_mode %}KillMode={{kill_mode}}
+{% endif %}
+{% if service_max_open_files is defined %}LimitNOFILE={{service_max_open_files}}
+{% endif %}
+{% if console_logs is defined %}StandardOutput=syslog+console
+StandardError=syslog+console
+{% endif %}
+
+
+[Install]
+WantedBy=multi-user.target

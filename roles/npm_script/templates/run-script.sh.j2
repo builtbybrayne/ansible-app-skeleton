@@ -1,0 +1,6 @@
+#! /bin/bash
+
+. /etc/environment
+echo "---------------------" >> {{_logfile}}
+
+node {{npm_build}}/node_modules/.bin/{{npm.bin_script|default(npm.package_name)}} {{npm.script_args}} >> {{_logfile}} 2>&1

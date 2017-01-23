@@ -1,0 +1,3 @@
+- name: rebuild harvester
+  include: roles/logio/tasks/restart_harvester.yml
+  static: yes

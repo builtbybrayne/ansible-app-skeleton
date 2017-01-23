@@ -1,0 +1,42 @@
+- name: install nginx
+  apt: name=nginx state=present
+  become: yes
+
+- name: Create blank nginx default.conf
+  file: path=/etc/nginx/conf.d/default.conf state=touch
+  become: yes
+  changed_when: false
+
+- name: Ensure nginx directories exist
+  include: mkdir.yml dir="{{item}}"
+  become: yes
+  with_items:
+    - /etc/nginx/sites-available
+    - /etc/nginx/sites-enabled
+  changed_when: false
+
+- name: Download nginx Amplify
+  get_url: url=https://github.com/nginxinc/nginx-amplify-agent/raw/master/packages/install.sh dest=/tmp/nginx_amplify_install.sh
+  when: nginx_amplify_key is defined
+
+- name: Install nginx Amplify
+  shell: API_KEY={{nginx_amplify_key}} sh ./nginx_amplify_install.sh && touch /etc/nginx/amplify_installed
+  args:
+    chdir: /tmp/
+    creates: /etc/nginx/amplify_installed
+  become: yes
+  when: nginx_amplify_key is defined
+
+- name: Copy nginx Amplify config
+  copy: src=stub_status.conf dest=/etc/nginx/conf.d/
+  become: yes
+  register: amplify_config
+  when: nginx_amplify_key is defined
+
+- name: Restart nginx
+  service: name=nginx state=restarted
+  become: yes
+  when: amplify_config|changed
+
+- name: Include in Log.io
+  include: mkLogio.yml fragment=nginx template=nginx_logio.conf.j2

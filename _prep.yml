@@ -1,0 +1,11 @@
+- hosts: all
+  handlers:
+    - include: handlers/main.yml
+  pre_tasks:
+    - include: tasks/facts.yml
+  roles:
+    - { role: base, tags: ['base'] }
+    - { role: hosts, tags: ['hosts', 'prep']}
+    - { role: nginx, tags: ['nginx', 'prep'] }
+    - { role: npm, tags: ['prep', 'npm'] }
+    - { role: logio, tags: ['logio', 'prep'] }
