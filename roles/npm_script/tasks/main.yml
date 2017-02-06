@@ -17,15 +17,15 @@
 - name: Ensure {{npm.service_name}} directories exist
   include: mkdir.yml dir="{{item}}"
   with_items:
-    - "{{npm_build_directory}}"
+    - "{{npm_build_dir}}"
 
 - name: Copy bootstrap package.json for {{npm.service_name}}
-  template: src=package.json.j2 dest="{{npm_build_directory}}/package.json" owner={{npm.user|default(ansible_ssh_user}} group=admin mode=0644
+  template: src=package.json.j2 dest="{{npm_build_dir}}/package.json" owner={{npm.user|default(ansible_ssh_user}} group=admin mode=0644
 
 - name: Check if we need to run npm install for {{npm.service_name}}
   shell: npm ls
   args:
-      chdir: "{{npm_build_directory}}"
+      chdir: "{{npm_build_dir}}"
   ignore_errors: true
   changed_when: false
   register: npm_ls
@@ -33,7 +33,7 @@
 - name: Build {{npm.service_name}}
   shell: npm install
   args:
-    chdir: "{{npm_build_directory}}"
+    chdir: "{{npm_build_dir}}"
   when: npm_ls|failed
   register: install
 
